@@ -1,7 +1,7 @@
 // prop getters
 
-import React from 'react'
-import {Switch} from '../switch'
+import React from 'react';
+import { Switch } from '../switch';
 
 // Check out the previous usage example. How would someone pass
 // a custom `onClick` handler? It'd be pretty tricky! It'd be
@@ -13,27 +13,28 @@ import {Switch} from '../switch'
 // with the ones we need to get our toggle functionality to work
 //
 // 💰 Here's a little utility that might come in handy
-// const callAll = (...fns) => (...args) => fns.forEach(fn => fn && fn(...args))
+const callAll = (...fns) => (...args) => fns.forEach(fn => fn && fn(...args));
 
 class Toggle extends React.Component {
-  state = {on: false}
+  state = { on: false };
   toggle = () =>
     this.setState(
-      ({on}) => ({on: !on}),
+      ({ on }) => ({ on: !on }),
       () => this.props.onToggle(this.state.on),
-    )
+    );
   getStateAndHelpers() {
     return {
       on: this.state.on,
       toggle: this.toggle,
-      togglerProps: {
+      getTogglerProps: ({ onClick, ...customProps }) => ({
         'aria-expanded': this.state.on,
-        onClick: this.toggle,
-      },
-    }
+        onClick: callAll(this.toggle, onClick),
+        ...customProps,
+      }),
+    };
   }
   render() {
-    return this.props.children(this.getStateAndHelpers())
+    return this.props.children(this.getStateAndHelpers());
   }
 }
 
@@ -46,9 +47,9 @@ function Usage({
 }) {
   return (
     <Toggle onToggle={onToggle}>
-      {({on, getTogglerProps}) => (
+      {({ on, getTogglerProps }) => (
         <div>
-          <Switch {...getTogglerProps({on})} />
+          <Switch {...getTogglerProps({ on })} />
           <hr />
           <button
             {...getTogglerProps({
@@ -62,8 +63,8 @@ function Usage({
         </div>
       )}
     </Toggle>
-  )
+  );
 }
-Usage.title = 'Prop Getters'
+Usage.title = 'Prop Getters';
 
-export {Toggle, Usage as default}
+export { Toggle, Usage as default };

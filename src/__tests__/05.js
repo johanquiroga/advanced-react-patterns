@@ -1,31 +1,27 @@
-import React from 'react'
-import {renderToggle, Simulate} from '../../test/utils'
-import Usage from '../exercises-final/05'
-// import Usage from '../exercises/05'
+import React from 'react';
+import { renderToggle, Simulate } from '../../test/utils';
+// import Usage from '../exercises-final/05'
+import Usage from '../exercises/05';
 
 test('renders a toggle component', () => {
-  const handleToggle = jest.fn()
-  const {toggleButton, toggle} = renderToggle(
-    <Usage onToggle={handleToggle} />,
-  )
-  expect(toggleButton).toBeOff()
-  toggle()
-  expect(toggleButton).toBeOn()
-  expect(handleToggle).toHaveBeenCalledTimes(1)
-  expect(handleToggle).toHaveBeenCalledWith(true)
-})
+  const handleToggle = jest.fn();
+  const { toggleButton, toggle } = renderToggle(<Usage onToggle={handleToggle} />);
+  expect(toggleButton).toBeOff();
+  toggle();
+  expect(toggleButton).toBeOn();
+  expect(handleToggle).toHaveBeenCalledTimes(1);
+  expect(handleToggle).toHaveBeenCalledWith(true);
+});
 
 test('can also toggle with the custom button', () => {
-  const handleToggle = jest.fn()
-  const {toggleButton, getByLabelText} = renderToggle(
-    <Usage onToggle={handleToggle} />,
-  )
-  expect(toggleButton).toBeOff()
-  Simulate.click(getByLabelText('custom-button'))
-  expect(toggleButton).toBeOn()
-  expect(handleToggle).toHaveBeenCalledTimes(1)
-  expect(handleToggle).toHaveBeenCalledWith(true)
-})
+  const handleToggle = jest.fn();
+  const { toggleButton, getByLabelText } = renderToggle(<Usage onToggle={handleToggle} />);
+  expect(toggleButton).toBeOff();
+  Simulate.click(getByLabelText('custom-button'));
+  expect(toggleButton).toBeOn();
+  expect(handleToggle).toHaveBeenCalledTimes(1);
+  expect(handleToggle).toHaveBeenCalledWith(true);
+});
 
 //////// Elaboration & Feedback /////////
 // When you've finished with the exercises:
@@ -37,7 +33,7 @@ test('can also toggle with the custom button', () => {
 http://ws.kcd.im/?ws=react%20patterns&e=05&em=johan.c.quiroga@gmail.com
 */
 test.skip('I submitted my elaboration and feedback', () => {
-  const submitted = false // change this when you've submitted!
-  expect(submitted).toBe(true)
-})
+  const submitted = false; // change this when you've submitted!
+  expect(submitted).toBe(true);
+});
 ////////////////////////////////

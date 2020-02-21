@@ -1,15 +1,15 @@
 // prop collections
 
-import React from 'react'
-import {Switch} from '../switch'
+import React from 'react';
+import { Switch } from '../switch';
 
 class Toggle extends React.Component {
-  state = {on: false}
+  state = { on: false };
   toggle = () =>
     this.setState(
-      ({on}) => ({on: !on}),
+      ({ on }) => ({ on: !on }),
       () => this.props.onToggle(this.state.on),
-    )
+    );
   getStateAndHelpers() {
     return {
       on: this.state.on,
@@ -23,22 +23,24 @@ class Toggle extends React.Component {
       // 🐨 Add a `togglerProps` object that has an `aria-expanded` (should
       // be set to the value of the `on` state), and an `onClick` assigned
       // to the toggle function.
-    }
+      togglerProps: {
+        'aria-expanded': this.state.on,
+        onClick: this.toggle,
+      },
+    };
   }
   render() {
-    return this.props.children(this.getStateAndHelpers())
+    return this.props.children(this.getStateAndHelpers());
   }
 }
 
 // Don't make changes to the Usage component. It's here to show you how your
 // component is intended to be used and is used in the tests.
 // You can make all the tests pass by updating the Toggle component.
-function Usage({
-  onToggle = (...args) => console.log('onToggle', ...args),
-}) {
+function Usage({ onToggle = (...args) => console.log('onToggle', ...args) }) {
   return (
     <Toggle onToggle={onToggle}>
-      {({on, togglerProps}) => (
+      {({ on, togglerProps }) => (
         <div>
           <Switch on={on} {...togglerProps} />
           <hr />
@@ -48,8 +50,8 @@ function Usage({
         </div>
       )}
     </Toggle>
-  )
+  );
 }
-Usage.title = 'Prop Collections'
+Usage.title = 'Prop Collections';
 
-export {Toggle, Usage as default}
+export { Toggle, Usage as default };

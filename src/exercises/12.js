@@ -1,18 +1,17 @@
 // Higher Order Components
 
-import React from 'react'
-// import hoistNonReactStatics from 'hoist-non-react-statics'
-import {Switch} from '../switch'
+import React from 'react';
+import hoistNonReactStatics from 'hoist-non-react-statics';
+import { Switch } from '../switch';
 
 const ToggleContext = React.createContext({
   on: false,
   toggle: () => {},
   reset: () => {},
   getTogglerProps: () => ({}),
-})
+});
 
-const callAll = (...fns) => (...args) =>
-  fns.forEach(fn => fn && fn(...args))
+const callAll = (...fns) => (...args) => fns.forEach(fn => fn && fn(...args));
 
 class Toggle extends React.Component {
   static defaultProps = {
@@ -21,108 +20,97 @@ class Toggle extends React.Component {
     onToggle: () => {},
     onStateChange: () => {},
     stateReducer: (state, changes) => changes,
-  }
+  };
   static stateChangeTypes = {
     reset: '__toggle_reset__',
     toggle: '__toggle_toggle__',
-  }
-  static Consumer = ToggleContext.Consumer
+  };
+  static Consumer = ToggleContext.Consumer;
 
   reset = () =>
+    this.internalSetState({ ...this.initialState, type: Toggle.stateChangeTypes.reset }, () =>
+      this.props.onReset(this.getState().on),
+    );
+  toggle = ({ type = Toggle.stateChangeTypes.toggle } = {}) =>
     this.internalSetState(
-      {...this.initialState, type: Toggle.stateChangeTypes.reset},
-      () => this.props.onReset(this.getState().on),
-    )
-  toggle = ({type = Toggle.stateChangeTypes.toggle} = {}) =>
-    this.internalSetState(
-      ({on}) => ({type, on: !on}),
+      ({ on }) => ({ type, on: !on }),
       () => this.props.onToggle(this.getState().on),
-    )
-  getTogglerProps = ({onClick, ...props} = {}) => ({
+    );
+  getTogglerProps = ({ onClick, ...props } = {}) => ({
     onClick: callAll(onClick, () => this.toggle()),
     'aria-expanded': this.getState().on,
     ...props,
-  })
+  });
   initialState = {
     on: this.props.initialOn,
     toggle: this.toggle,
     reset: this.reset,
     getTogglerProps: this.getTogglerProps,
-  }
-  state = this.initialState
+  };
+  state = this.initialState;
   isControlled(prop) {
-    return this.props[prop] !== undefined
+    return this.props[prop] !== undefined;
   }
   getState(state = this.state) {
-    return Object.entries(state).reduce(
-      (combinedState, [key, value]) => {
-        if (this.isControlled(key)) {
-          combinedState[key] = this.props[key]
-        } else {
-          combinedState[key] = value
-        }
-        return combinedState
-      },
-      {},
-    )
+    return Object.entries(state).reduce((combinedState, [key, value]) => {
+      if (this.isControlled(key)) {
+        combinedState[key] = this.props[key];
+      } else {
+        combinedState[key] = value;
+      }
+      return combinedState;
+    }, {});
   }
   internalSetState(changes, callback = () => {}) {
-    let allChanges
+    let allChanges;
     this.setState(
       state => {
-        const combinedState = this.getState(state)
+        const combinedState = this.getState(state);
         // handle function setState call
-        const changesObject =
-          typeof changes === 'function'
-            ? changes(combinedState)
-            : changes
+        const changesObject = typeof changes === 'function' ? changes(combinedState) : changes;
 
         // apply state reducer
-        allChanges =
-          this.props.stateReducer(combinedState, changesObject) || {}
+        allChanges = this.props.stateReducer(combinedState, changesObject) || {};
 
         // remove the type so it's not set into state
-        const {type: ignoredType, ...onlyChanges} = allChanges
+        const { type: ignoredType, ...onlyChanges } = allChanges;
 
-        const nonControlledChanges = Object.keys(
-          combinedState,
-        ).reduce((newChanges, stateKey) => {
+        const nonControlledChanges = Object.keys(combinedState).reduce((newChanges, stateKey) => {
           if (!this.isControlled(stateKey)) {
-            newChanges[stateKey] = onlyChanges.hasOwnProperty(
-              stateKey,
-            )
+            newChanges[stateKey] = onlyChanges.hasOwnProperty(stateKey)
               ? onlyChanges[stateKey]
-              : combinedState[stateKey]
+              : combinedState[stateKey];
           }
-          return newChanges
-        }, {})
+          return newChanges;
+        }, {});
 
         // return null if there are no changes to be made
-        return Object.keys(nonControlledChanges || {}).length
-          ? nonControlledChanges
-          : null
+        return Object.keys(nonControlledChanges || {}).length ? nonControlledChanges : null;
       },
       () => {
         // call onStateChange with all the changes (including the type)
-        this.props.onStateChange(allChanges, this.state)
-        callback()
+        this.props.onStateChange(allChanges, this.state);
+        callback();
       },
-    )
+    );
   }
   render() {
-    const {children} = this.props
-    const ui =
-      typeof children === 'function' ? children(this.state) : children
-    return (
-      <ToggleContext.Provider value={this.state}>
-        {ui}
-      </ToggleContext.Provider>
-    )
+    const { children } = this.props;
+    const ui = typeof children === 'function' ? children(this.state) : children;
+    return <ToggleContext.Provider value={this.state}>{ui}</ToggleContext.Provider>;
   }
 }
 
 function withToggle(Component) {
-  return Component
+  function Wrapper(props, ref) {
+    return (
+      <Toggle.Consumer>
+        {toggleContext => <Component {...props} toggle={toggleContext} ref={ref} />}
+      </Toggle.Consumer>
+    );
+  }
+  Wrapper.displayName = `withToggle(${Component.displayName || Component.name})`;
+  return hoistNonReactStatics(React.forwardRef(Wrapper), Component);
   // The `withToggle` function is called a "Higher Order Component"
   // It's another way to share code and allows you to statically
   // create new components to render.
@@ -158,19 +146,15 @@ function withToggle(Component) {
 // just to ensure you're HOC handles common issues with HOCs
 const Subtitle = withToggle(
   class extends React.Component {
-    static displayName = 'Subtitle'
-    static emoji = '👩‍🏫 👉 🕶'
-    static text = 'Teachers are awesome'
-    instanceProperty = true
+    static displayName = 'Subtitle';
+    static emoji = '👩‍🏫 👉 🕶';
+    static text = 'Teachers are awesome';
+    instanceProperty = true;
     render() {
-      return (
-        <span>
-          {this.props.toggle.on ? Subtitle.emoji : Subtitle.text}
-        </span>
-      )
+      return <span>{this.props.toggle.on ? Subtitle.emoji : Subtitle.text}</span>;
     }
   },
-)
+);
 
 function Nav() {
   return (
@@ -191,16 +175,14 @@ function Nav() {
         </nav>
       )}
     </Toggle.Consumer>
-  )
+  );
 }
 
 function NavSwitch() {
   return (
     <div className="nav-switch">
       <div>
-        <Toggle.Consumer>
-          {toggle => (toggle.on ? '🦄' : 'Enable Emoji')}
-        </Toggle.Consumer>
+        <Toggle.Consumer>{toggle => (toggle.on ? '🦄' : 'Enable Emoji')}</Toggle.Consumer>
       </div>
       <Toggle.Consumer>
         {toggle => (
@@ -212,7 +194,7 @@ function NavSwitch() {
         )}
       </Toggle.Consumer>
     </div>
-  )
+  );
 }
 
 function Header() {
@@ -221,17 +203,17 @@ function Header() {
       <Nav />
       <NavSwitch />
     </div>
-  )
+  );
 }
 
 // This is part of our contrived example so we can test things properly
 // to make sure your HOC handles common issues
 export class Debug extends React.Component {
-  childInstance = React.createRef()
+  childInstance = React.createRef();
   render() {
     return React.cloneElement(this.props.children, {
       ref: this.childInstance,
-    })
+    });
   }
 }
 
@@ -239,15 +221,13 @@ function Title() {
   return (
     <div>
       <h1>
-        <Toggle.Consumer>
-          {toggle => `Who is ${toggle.on ? '🕶❓' : 'awesome?'}`}
-        </Toggle.Consumer>
+        <Toggle.Consumer>{toggle => `Who is ${toggle.on ? '🕶❓' : 'awesome?'}`}</Toggle.Consumer>
       </h1>
       <Debug child="subtitle">
         <Subtitle />
       </Debug>
     </div>
-  )
+  );
 }
 
 function Article() {
@@ -277,7 +257,7 @@ function Article() {
         }
       </Toggle.Consumer>
     </div>
-  )
+  );
 }
 
 function Post() {
@@ -286,7 +266,7 @@ function Post() {
       <Title />
       <Article />
     </div>
-  )
+  );
 }
 
 function Usage() {
@@ -297,11 +277,11 @@ function Usage() {
         <Post />
       </div>
     </Toggle>
-  )
+  );
 }
-Usage.title = 'Higher Order Components'
+Usage.title = 'Higher Order Components';
 
-export {Toggle, Usage as default}
+export { Toggle, Usage as default };
 
 /* eslint
 "no-unused-vars": [
